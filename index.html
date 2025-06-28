@@ -4,12 +4,7 @@
   <meta charset="UTF-8" />
   <title>Budget Mini App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
-    button { font-size: 18px; padding: 10px; margin: 5px 0; width: 100%; }
-    #balance { font-size: 24px; margin-bottom: 20px; }
-    label, select, input { display: block; width: 100%; margin: 10px 0; font-size: 18px; }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
@@ -51,10 +46,10 @@
   const submitBtn = document.getElementById("submitBtn");
   const cancelBtn = document.getElementById("cancelBtn");
 
-  let currentType = null; // income или expense
+  let currentType = null;
 
   function updateBalance() {
-    fetch("https://ТВОЙ_СЕРВЕР/api/balance")
+    fetch("https://insects-knowledge-catalyst-manually.trycloudflare.com/api/balance")
       .then(res => res.json())
       .then(data => {
         balanceSpan.textContent = data.balance.toFixed(2);
@@ -89,7 +84,7 @@
 
     const category = currentType === "expense" ? categorySelect.value : null;
 
-    fetch("https://ТВОЙ_СЕРВЕР/api/transaction", {
+    fetch("https://insects-knowledge-catalyst-manually.trycloudflare.com/api/transaction", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({type: currentType, amount: amount, category: category})
@@ -106,7 +101,6 @@
     .catch(() => alert("Ошибка соединения с сервером"));
   };
 
-  // Инициализация
   updateBalance();
 </script>
 

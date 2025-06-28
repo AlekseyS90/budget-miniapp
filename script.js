@@ -5,7 +5,7 @@ async function getBalance() {
         const response = await fetch(`${API_BASE}/api/balance`);
         if (!response.ok) throw new Error("Ошибка сети");
         const data = await response.json();
-        document.getElementById("balance").innerText = `${data.balance} ₽`;
+        document.getElementById("balance").innerText = `${data.balance.toFixed(2)} ₽`;
     } catch (error) {
         console.error("Ошибка при получении баланса:", error);
         document.getElementById("balance").innerText = "Ошибка загрузки";
@@ -14,10 +14,10 @@ async function getBalance() {
 
 async function sendIncome(amount) {
     try {
-        const response = await fetch(`${API_BASE}/api/income`, {
+        const response = await fetch(`${API_BASE}/api/transaction`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({amount: Number(amount)})
+            body: JSON.stringify({type: "income", amount: Number(amount), category: null})
         });
         if (!response.ok) throw new Error("Ошибка сети");
         await getBalance();
@@ -28,10 +28,10 @@ async function sendIncome(amount) {
 
 async function sendExpense(category, amount) {
     try {
-        const response = await fetch(`${API_BASE}/api/expense`, {
+        const response = await fetch(`${API_BASE}/api/transaction`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({category, amount: Number(amount)})
+            body: JSON.stringify({type: "expense", amount: Number(amount), category})
         });
         if (!response.ok) throw new Error("Ошибка сети");
         await getBalance();
@@ -40,12 +40,21 @@ async function sendExpense(category, amount) {
     }
 }
 
-// Пример функций вызова для кнопок (тебе их надо связать с элементами на странице)
+// Привязка кнопок и логика на примере, чтобы интегрировать в твой HTML:
+document.getElementById("incomeBtn").onclick = () => {
+    const amount = parseFloat(prompt("Введите сумму прихода:"));
+    if (!isNaN(amount) && amount > 0) {
+        sendIncome(amount);
+    } else alert("Введите корректную сумму");
+};
 
-document.getElementById("refreshBalanceBtn").addEventListener("click", getBalance);
-
-// Другие элементы и логика для отправки дохода и расхода, категорий и т.д.
-// Например, при выборе категории и суммы вызывай sendExpense(category, amount)
+document.getElementById("expenseBtn").onclick = () => {
+    const category = prompt("Введите категорию расхода:");
+    const amount = parseFloat(prompt("Введите сумму расхода:"));
+    if (category && !isNaN(amount) && amount > 0) {
+        sendExpense(category, amount);
+    } else alert("Введите корректные данные");
+};
 
 window.onload = () => {
     getBalance();
