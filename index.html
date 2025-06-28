@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Budget Mini App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+    button { font-size: 18px; padding: 10px; margin: 5px 0; width: 100%; }
+    #balance { font-size: 24px; margin-bottom: 20px; }
+    label, select, input { display: block; width: 100%; margin: 10px 0; font-size: 18px; }
+  </style>
+</head>
+<body>
+
+  <h1>Управление бюджетом</h1>
+
+  <div id="balance">Баланс: <span>0</span> ₽</div>
+
+  <button id="incomeBtn">Добавить приход</button>
+  <button id="expenseBtn">Добавить расход</button>
+
+  <div id="form" style="display:none;">
+    <label for="category">Категория (для расхода):</label>
+    <select id="category">
+      <option value="Продукты">Продукты</option>
+      <option value="кафе-рестораны-фастфуд">Кафе-рестораны-фастфуд</option>
+      <option value="транспорт">Транспорт</option>
+      <option value="каршеринг">Каршеринг</option>
+      <option value="курилки">Курилки</option>
+      <option value="дом">Дом</option>
+      <option value="здоровье">Здоровье</option>
+      <option value="алкоголь">Алкоголь</option>
+      <option value="разное">Разное</option>
+    </select>
+
+    <label for="amount">Сумма (₽):</label>
+    <input type="number" id="amount" min="0" step="0.01" />
+
+    <button id="submitBtn">Отправить</button>
+    <button id="cancelBtn">Отмена</button>
+  </div>
+
+<script>
+  const balanceSpan = document.querySelector("#balance span");
+  const incomeBtn = document.getElementById("incomeBtn");
+  const expenseBtn = document.getElementById("expenseBtn");
+  const form = document.getElementById("form");
+  const categorySelect = document.getElementById("category");
+  const amountInput = document.getElementById("amount");
+  const submitBtn = document.getElementById("submitBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+
+  let currentType = null; // income или expense
+
+  function updateBalance() {
+    fetch("https://ТВОЙ_СЕРВЕР/api/balance")
+      .then(res => res.json())
+      .then(data => {
+        balanceSpan.textContent = data.balance.toFixed(2);
+      })
+      .catch(() => alert("Ошибка соединения с сервером"));
+  }
+
+  incomeBtn.onclick = () => {
+    currentType = "income";
+    categorySelect.style.display = "none";
+    form.style.display = "block";
+    amountInput.value = "";
+  };
+
+  expenseBtn.onclick = () => {
+    currentType = "expense";
+    categorySelect.style.display = "block";
+    form.style.display = "block";
+    amountInput.value = "";
+  };
+
+  cancelBtn.onclick = () => {
+    form.style.display = "none";
+  };
+
+  submitBtn.onclick = () => {
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Введите правильную сумму");
+      return;
+    }
+
+    const category = currentType === "expense" ? categorySelect.value : null;
+
+    fetch("https://ТВОЙ_СЕРВЕР/api/transaction", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({type: currentType, amount: amount, category: category})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert("Ошибка: " + data.error);
+      } else {
+        updateBalance();
+        form.style.display = "none";
+      }
+    })
+    .catch(() => alert("Ошибка соединения с сервером"));
+  };
+
+  // Инициализация
+  updateBalance();
+</script>
+
+</body>
+</html>
