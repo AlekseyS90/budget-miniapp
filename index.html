@@ -7,77 +7,57 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f7f4f1;
+      background: #f7f4f1;
       color: #333;
       margin: 0;
       padding: 20px;
       max-width: 420px;
       margin: auto;
     }
-
-    h1 {
-      text-align: center;
-      color: #6d4c41;
-    }
-
+    h1 { text-align: center; color: #6d4c41; }
     .summary {
-      background-color: #fff8f0;
+      background: #fff8f0;
       padding: 15px;
       border-radius: 10px;
       margin-bottom: 20px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
       text-align: center;
     }
-
-    .summary div {
-      font-size: 20px;
-      margin: 10px 0;
-    }
-
+    .summary div { font-size: 20px; margin: 10px 0; }
     button {
-      display: block;
       width: 100%;
       font-size: 18px;
       padding: 12px;
       margin: 8px 0;
-      background-color: #ffe0b2;
+      background: #ffe0b2;
       border: none;
       border-radius: 10px;
       cursor: pointer;
       transition: 0.2s;
     }
-
-    button:hover {
-      background-color: #ffcc80;
-    }
-
+    button:hover { background: #ffcc80; }
     #categoryButtons button {
       width: 48%;
       display: inline-block;
       margin: 4px 1%;
     }
-
     #form {
-      background-color: #fff;
+      background: #fff;
       padding: 15px;
       border-radius: 10px;
       display: none;
       margin-top: 15px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
-
     input[type="number"] {
-      font-size: 18px;
       width: 100%;
       padding: 10px;
       margin-top: 10px;
+      font-size: 18px;
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-
-    .hide {
-      display: none;
-    }
+    .hide { display: none; }
   </style>
 </head>
 <body>
@@ -147,12 +127,10 @@
         alert("Введите корректную сумму");
         return;
       }
-
       if (currentType === "expense" && !selectedCategory) {
         alert("Выберите категорию");
         return;
       }
-
       fetch("https://telegrambotmany.ru/api/transaction", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -171,15 +149,16 @@
     }
 
     function getStats() {
-      window.open("https://telegrambotmany.ru/api/transaction/statistics", "_blank");
+      window.open("https://telegrambotmany.ru/api/statistics", "_blank");
     }
 
     function loadBalance() {
-      fetch("https://telegrambotmany.ru/api/transaction")
+      fetch("https://telegrambotmany.ru/api/balance")
         .then(res => res.json())
         .then(data => {
-          updateUI(data.balance, data.expenses);
-        });
+          updateUI(data.balance, data.expenses || 0);
+        })
+        .catch(() => alert("Ошибка соединения с сервером"));
     }
 
     loadBalance();
