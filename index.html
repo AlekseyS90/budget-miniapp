@@ -153,7 +153,7 @@
         return;
       }
 
-      fetch("https://your-tunnel-url/api/transaction", {
+      fetch("https://rear-saint-click-opinions.trycloudflare.com", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -171,11 +171,11 @@
     }
 
     function getStats() {
-      window.open("https://your-tunnel-url/statistics", "_blank");
+      window.open("https://rear-saint-click-opinions.trycloudflare.com/statistics", "_blank");
     }
 
     function loadBalance() {
-      fetch("https://your-tunnel-url/api/balance")
+      fetch("https://rear-saint-click-opinions.trycloudflare.com/api/balance")
         .then(res => res.json())
         .then(data => {
           updateUI(data.balance, data.expenses);
