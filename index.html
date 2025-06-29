@@ -1,108 +1,189 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Budget Mini App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <title>💸 Личный Бюджет</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f4f1;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      max-width: 420px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #6d4c41;
+    }
+
+    .summary {
+      background-color: #fff8f0;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+
+    .summary div {
+      font-size: 20px;
+      margin: 10px 0;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      font-size: 18px;
+      padding: 12px;
+      margin: 8px 0;
+      background-color: #ffe0b2;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background-color: #ffcc80;
+    }
+
+    #categoryButtons button {
+      width: 48%;
+      display: inline-block;
+      margin: 4px 1%;
+    }
+
+    #form {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      margin-top: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    input[type="number"] {
+      font-size: 18px;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .hide {
+      display: none;
+    }
+  </style>
 </head>
 <body>
 
-  <h1>Управление бюджетом</h1>
+  <h1>💸 Мой Бюджет</h1>
 
-  <div id="balance">Баланс: <span>0</span> ₽</div>
-
-  <button id="incomeBtn">Добавить приход</button>
-  <button id="expenseBtn">Добавить расход</button>
-
-  <div id="form" style="display:none;">
-    <label for="category">Категория (для расхода):</label>
-    <select id="category">
-      <option value="Продукты">Продукты</option>
-      <option value="кафе-рестораны-фастфуд">Кафе-рестораны-фастфуд</option>
-      <option value="транспорт">Транспорт</option>
-      <option value="каршеринг">Каршеринг</option>
-      <option value="курилки">Курилки</option>
-      <option value="дом">Дом</option>
-      <option value="здоровье">Здоровье</option>
-      <option value="алкоголь">Алкоголь</option>
-      <option value="разное">Разное</option>
-    </select>
-
-    <label for="amount">Сумма (₽):</label>
-    <input type="number" id="amount" min="0" step="0.01" />
-
-    <button id="submitBtn">Отправить</button>
-    <button id="cancelBtn">Отмена</button>
+  <div class="summary">
+    <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
+    <div>📉 Расходы в этом месяце: <span id="expenses">0.00</span> ₽</div>
   </div>
 
-<script>
-  const balanceSpan = document.querySelector("#balance span");
-  const incomeBtn = document.getElementById("incomeBtn");
-  const expenseBtn = document.getElementById("expenseBtn");
-  const form = document.getElementById("form");
-  const categorySelect = document.getElementById("category");
-  const amountInput = document.getElementById("amount");
-  const submitBtn = document.getElementById("submitBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
+  <button onclick="startIncome()">➕ Поступление</button>
+  <button onclick="startExpense()">➖ Расход</button>
+  <button onclick="getStats()">📊 Статистика</button>
 
-  let currentType = null;
+  <div id="form">
+    <div id="categoryButtons" class="hide">
+      <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
+      <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
+      <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
+      <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
+      <button onclick="selectCategory('Рестораны')">🍽️ Рестораны</button>
+      <button onclick="selectCategory('Аптека')">💊 Аптека</button>
+      <button onclick="selectCategory('Алкоголь')">🍷 Алкоголь</button>
+      <button onclick="selectCategory('Дом')">🏠 Дом</button>
+      <button onclick="selectCategory('Разное')">🎁 Разное</button>
+    </div>
 
-  function updateBalance() {
-    fetch("https://step-drum-cl-gun.trycloudflare.com")
-      .then(res => res.json())
-      .then(data => {
-        balanceSpan.textContent = data.balance.toFixed(2);
-      })
-      .catch(() => alert("Ошибка соединения с сервером"));
-  }
+    <input id="amount" type="number" placeholder="Введите сумму ₽">
+    <button onclick="submitForm()">✅ Подтвердить</button>
+    <button onclick="cancelForm()">❌ Отмена</button>
+  </div>
 
-  incomeBtn.onclick = () => {
-    currentType = "income";
-    categorySelect.style.display = "none";
-    form.style.display = "block";
-    amountInput.value = "";
-  };
+  <script>
+    let currentType = null;
+    let selectedCategory = null;
 
-  expenseBtn.onclick = () => {
-    currentType = "expense";
-    categorySelect.style.display = "block";
-    form.style.display = "block";
-    amountInput.value = "";
-  };
-
-  cancelBtn.onclick = () => {
-    form.style.display = "none";
-  };
-
-  submitBtn.onclick = () => {
-    const amount = parseFloat(amountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-      alert("Введите правильную сумму");
-      return;
+    function updateUI(balance = 0, expenses = 0) {
+      document.getElementById("balance").textContent = balance.toFixed(2);
+      document.getElementById("expenses").textContent = expenses.toFixed(2);
     }
 
-    const category = currentType === "expense" ? categorySelect.value : null;
+    function startIncome() {
+      currentType = "income";
+      document.getElementById("categoryButtons").classList.add("hide");
+      document.getElementById("form").style.display = "block";
+    }
 
-    fetch("https://step-drum-cl-gun.trycloudflare.com", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({type: currentType, amount: amount, category: category})
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert("Ошибка: " + data.error);
-      } else {
-        updateBalance();
-        form.style.display = "none";
+    function startExpense() {
+      currentType = "expense";
+      document.getElementById("categoryButtons").classList.remove("hide");
+      document.getElementById("form").style.display = "block";
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+    }
+
+    function cancelForm() {
+      document.getElementById("form").style.display = "none";
+      selectedCategory = null;
+    }
+
+    function submitForm() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (!amount || amount <= 0) {
+        alert("Введите корректную сумму");
+        return;
       }
-    })
-    .catch(() => alert("Ошибка соединения с сервером"));
-  };
 
-  updateBalance();
-</script>
+      if (currentType === "expense" && !selectedCategory) {
+        alert("Выберите категорию");
+        return;
+      }
+
+      fetch("https://your-tunnel-url/api/transaction", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          type: currentType,
+          amount,
+          category: currentType === "expense" ? selectedCategory : null
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        cancelForm();
+        loadBalance();
+      })
+      .catch(() => alert("Ошибка соединения с сервером"));
+    }
+
+    function getStats() {
+      window.open("https://your-tunnel-url/statistics", "_blank");
+    }
+
+    function loadBalance() {
+      fetch("https://your-tunnel-url/api/balance")
+        .then(res => res.json())
+        .then(data => {
+          updateUI(data.balance, data.expenses);
+        });
+    }
+
+    loadBalance();
+  </script>
 
 </body>
 </html>
