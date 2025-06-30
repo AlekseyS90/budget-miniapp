@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>💸 Личный Бюджет</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -60,6 +61,7 @@
     }
     #statsCanvas { max-width: 100%; margin-top: 20px; }
     .hide { display: none; }
+    .error { color: red; text-align: center; margin: 10px 0; }
   </style>
 </head>
 <body>
@@ -68,6 +70,7 @@
   <div class="summary">
     <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
     <div>📉 Расходы за месяц: <span id="expenses">0.00</span> ₽</div>
+    <div id="error" class="error"></div>
   </div>
 
   <button onclick="startIncome()">➕ Поступление</button>
@@ -77,181 +80,4 @@
   <div id="form">
     <div id="categoryButtons" class="hide">
       <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
-      <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
-      <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
-      <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
-      <button onclick="selectCategory('Рестораны')">🍽️ Рестораны</button>
-      <button onclick="selectCategory('Аптека')">💊 Аптека</button>
-      <button onclick="selectCategory('Алкоголь')">🍷 Алкоголь</button>
-      <button onclick="selectCategory('Дом')">🏠 Дом</button>
-      <button onclick="selectCategory('Разное')">🎁 Разное</button>
-    </div>
-    <input id="amount" type="number" placeholder="Сумма ₽" />
-    <button onclick="submitForm()">✅ Подтвердить</button>
-    <button onclick="cancelForm()">❌ Отмена</button>
-  </div>
-
-  <div id="statsSection" class="hide">
-    <select id="filterSelect" onchange="fetchStats()">
-      <option value="week">За неделю</option>
-      <option value="month">За месяц</option>
-    </select>
-    <canvas id="statsCanvas"></canvas>
-  </div>
-
-  <script>
-    const baseURL = "https://telegrambotmany.ru/api/";
-    const AUTH_TOKEN = "supersecret";
-    let currentType = null;
-    let selectedCategory = null;
-    let chart = null;
-
-    function updateUI(balance = 0, expenses = 0) {
-      document.getElementById("balance").textContent = balance.toFixed(2);
-      document.getElementById("expenses").textContent = expenses.toFixed(2);
-    }
-
-    function loadBalance() {
-      console.log("Fetching balance from:", baseURL + "transaction");
-      fetch(baseURL + "transaction", {
-        headers: { "Authorization": "Bearer " + AUTH_TOKEN }
-      })
-      .then(r => {
-        console.log("Response status:", r.status);
-        if (!r.ok) {
-          return r.text().then(text => {
-            console.error("Server response:", text);
-            throw new Error(`HTTP error! status: ${r.status}`);
-          });
-        }
-        return r.json();
-      })
-      .then(d => {
-        console.log("Received data:", d);
-        updateUI(d.balance, d.expenses);
-      })
-      .catch(err => {
-        console.error("Ошибка загрузки баланса:", err);
-        alert("❌ Ошибка загрузки баланса: " + err.message);
-      });
-    }
-
-    function startIncome() {
-      currentType = "income";
-      openForm(false);
-    }
-
-    function startExpense() {
-      currentType = "expense";
-      openForm(true);
-    }
-
-    function openForm(showCats) {
-      document.getElementById("form").style.display = "block";
-      document.getElementById("categoryButtons").classList.toggle("hide", !showCats);
-    }
-
-    function selectCategory(c) {
-      selectedCategory = c;
-      console.log("Selected category:", c);
-    }
-
-    function cancelForm() {
-      document.getElementById("form").style.display = "none";
-      selectedCategory = null;
-      document.getElementById("amount").value = "";
-    }
-
-    function submitForm() {
-      const amount = parseFloat(document.getElementById("amount").value);
-      if (!amount || amount <= 0) return alert("Введите сумму");
-      if (currentType === "expense" && !selectedCategory) return alert("Выберите категорию");
-
-      console.log("Submitting:", { type: currentType, amount, category: selectedCategory });
-      
-      fetch(baseURL + "transaction", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + AUTH_TOKEN
-        },
-        body: JSON.stringify({
-          type: currentType,
-          amount: amount,
-          category: currentType === "expense" ? selectedCategory : null
-        })
-      })
-      .then(r => {
-        if (!r.ok) {
-          return r.text().then(text => {
-            console.error("Server response:", text);
-            throw new Error(`HTTP error! status: ${r.status}`);
-          });
-        }
-        return r.json();
-      })
-      .then(() => {
-        cancelForm();
-        loadBalance();
-      })
-      .catch(err => {
-        console.error("Ошибка сети при добавлении:", err);
-        alert("❌ Ошибка сети при добавлении: " + err.message);
-      });
-    }
-
-    function showStats() {
-      document.getElementById("statsSection").classList.remove("hide");
-      fetchStats();
-    }
-
-    function fetchStats() {
-      const f = document.getElementById("filterSelect").value;
-      console.log("Fetching stats with filter:", f);
-
-      fetch(baseURL + `transaction/statistics?filter=${f}`, {
-        headers: { "Authorization": "Bearer " + AUTH_TOKEN }
-      })
-      .then(r => {
-        if (!r.ok) {
-          return r.text().then(text => {
-            console.error("Server response:", text);
-            throw new Error(`HTTP error! status: ${r.status}`);
-          });
-        }
-        return r.json();
-      })
-      .then(d => {
-        console.log("Stats data:", d);
-        const ctx = document.getElementById("statsCanvas").getContext("2d");
-        const labs = Object.keys(d.expenses || {});
-        const vals = Object.values(d.expenses || {});
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: labs.length ? labs : ["Нет расходов"],
-            datasets: [{
-              label: 'Расходы',
-              data: labs.length ? vals : [0],
-              backgroundColor: ['#FFB6B9']
-            }]
-          },
-          options: {
-            plugins: { legend: { display: false } }
-          }
-        });
-      })
-      .catch(err => {
-        console.error("Ошибка загрузки статистики:", err);
-        alert("❌ Ошибка загрузки статистики: " + err.message);
-      });
-    }
-
-    // Инициализация при загрузке
-    document.addEventListener('DOMContentLoaded', () => {
-      loadBalance();
-    });
-  </script>
-</body>
-</html>
+      <button
