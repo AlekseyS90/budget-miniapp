@@ -94,162 +94,164 @@
 </head>
 <body>
 
-<h1>💸 Мой Бюджет</h1>
+  <h1>💸 Мой Бюджет</h1>
 
-<div class="summary">
-  <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
-  <div>📉 Расходы в этом месяце: <span id="expenses">0.00</span> ₽</div>
-</div>
-
-<button onclick="startIncome()">➕ Поступление</button>
-<button onclick="startExpense()">➖ Расход</button>
-<button onclick="showStats()">📊 Статистика</button>
-
-<div id="form">
-  <div id="categoryButtons" class="hide">
-    <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
-    <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
-    <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
-    <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
-    <button onclick="selectCategory('Рестораны')">🍽️ Рестораны</button>
-    <button onclick="selectCategory('Аптека')">💊 Аптека</button>
-    <button onclick="selectCategory('Алкоголь')">🍷 Алкоголь</button>
-    <button onclick="selectCategory('Дом')">🏠 Дом</button>
-    <button onclick="selectCategory('Разное')">🎁 Разное</button>
+  <div class="summary">
+    <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
+    <div>📉 Расходы в этом месяце: <span id="expenses">0.00</span> ₽</div>
   </div>
 
-  <input id="amount" type="number" placeholder="Введите сумму ₽">
-  <button onclick="submitForm()">✅ Подтвердить</button>
-  <button onclick="cancelForm()">❌ Отмена</button>
-</div>
+  <button onclick="startIncome()">➕ Поступление</button>
+  <button onclick="startExpense()">➖ Расход</button>
+  <button onclick="showStats()">📊 Статистика</button>
 
-<div id="statsSection" class="hide">
-  <select id="filterSelect" onchange="fetchStats()">
-    <option value="week">За неделю</option>
-    <option value="month">За месяц</option>
-  </select>
-  <canvas id="statsCanvas"></canvas>
-</div>
+  <div id="form">
+    <div id="categoryButtons" class="hide">
+      <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
+      <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
+      <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
+      <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
+      <button onclick="selectCategory('Рестораны')">🍽️ Рестораны</button>
+      <button onclick="selectCategory('Аптека')">💊 Аптека</button>
+      <button onclick="selectCategory('Алкоголь')">🍷 Алкоголь</button>
+      <button onclick="selectCategory('Дом')">🏠 Дом</button>
+      <button onclick="selectCategory('Разное')">🎁 Разное</button>
+    </div>
 
-<script>
-  const AUTH_TOKEN = "65a0194e31260c9f4774f904bd5938ddd5ac763f660b168ecda19a7cd8cc1d94";
-  const baseURL = "https://telegrambotmany.ru/api";
+    <input id="amount" type="number" placeholder="Введите сумму ₽">
+    <button onclick="submitForm()">✅ Подтвердить</button>
+    <button onclick="cancelForm()">❌ Отмена</button>
+  </div>
 
-  let currentType = null;
-  let selectedCategory = null;
-  let chart = null;
+  <div id="statsSection" class="hide">
+    <select id="filterSelect" onchange="fetchStats()">
+      <option value="week">За неделю</option>
+      <option value="month">За месяц</option>
+    </select>
+    <canvas id="statsCanvas"></canvas>
+  </div>
 
-  function updateUI(balance = 0, expenses = 0) {
-    document.getElementById("balance").textContent = balance.toFixed(2);
-    document.getElementById("expenses").textContent = expenses.toFixed(2);
-  }
+  <script>
+    let currentType = null;
+    let selectedCategory = null;
 
-  function startIncome() {
-    currentType = "income";
-    document.getElementById("categoryButtons").classList.add("hide");
-    document.getElementById("form").style.display = "block";
-  }
+    const baseURL = "https://telegrambotmany.ru/api"; // 👈 Заменить при необходимости
+    const AUTH_TOKEN = "supersecret"; // 👈 Должен совпадать с many.py
 
-  function startExpense() {
-    currentType = "expense";
-    document.getElementById("categoryButtons").classList.remove("hide");
-    document.getElementById("form").style.display = "block";
-  }
+    function updateUI(balance = 0, expenses = 0) {
+      document.getElementById("balance").textContent = balance.toFixed(2);
+      document.getElementById("expenses").textContent = expenses.toFixed(2);
+    }
 
-  function selectCategory(cat) {
-    selectedCategory = cat;
-  }
+    function startIncome() {
+      currentType = "income";
+      document.getElementById("categoryButtons").classList.add("hide");
+      document.getElementById("form").style.display = "block";
+    }
 
-  function cancelForm() {
-    document.getElementById("form").style.display = "none";
-    selectedCategory = null;
-    document.getElementById("amount").value = "";
-  }
+    function startExpense() {
+      currentType = "expense";
+      document.getElementById("categoryButtons").classList.remove("hide");
+      document.getElementById("form").style.display = "block";
+    }
 
-  function submitForm() {
-    const amount = parseFloat(document.getElementById("amount").value);
-    if (!amount || amount <= 0) return alert("Введите корректную сумму");
-    if (currentType === "expense" && !selectedCategory) return alert("Выберите категорию");
+    function selectCategory(cat) {
+      selectedCategory = cat;
+    }
 
-    fetch(baseURL + "/transaction", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + AUTH_TOKEN
-      },
-      body: JSON.stringify({
-        type: currentType,
-        amount,
-        category: currentType === "expense" ? selectedCategory : null
-      })
-    })
-    .then(res => res.json())
-    .then(() => {
-      cancelForm();
-      loadBalance();
-    })
-    .catch(() => alert("Ошибка соединения с сервером"));
-  }
+    function cancelForm() {
+      document.getElementById("form").style.display = "none";
+      selectedCategory = null;
+      document.getElementById("amount").value = "";
+    }
 
-  function loadBalance() {
-    fetch(baseURL + "/transaction", {
-      headers: {
-        "Authorization": "Bearer " + AUTH_TOKEN
-      }
-    })
-    .then(res => res.json())
-    .then(data => updateUI(data.balance, data.expenses))
-    .catch(() => alert("Ошибка обновления баланса"));
-  }
+    function submitForm() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (!amount || amount <= 0) return alert("Введите корректную сумму");
+      if (currentType === "expense" && !selectedCategory) return alert("Выберите категорию");
 
-  function showStats() {
-    document.getElementById("statsSection").classList.remove("hide");
-    fetchStats();
-  }
-
-  function fetchStats() {
-    const filter = document.getElementById("filterSelect").value;
-
-    fetch(baseURL + `/transaction/statistics?filter=${filter}`, {
-      headers: {
-        "Authorization": "Bearer " + AUTH_TOKEN
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      const ctx = document.getElementById("statsCanvas").getContext("2d");
-
-      const labels = Object.keys(data.expenses || {});
-      const values = Object.values(data.expenses || {});
-      const colors = ['#FFB6B9', '#FFD3B6', '#FFFACD', '#D0F0C0', '#C6E2FF', '#E6E6FA', '#FFC0CB', '#F5DEB3', '#CCE5FF'];
-
-      if (chart) chart.destroy();
-
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels.length > 0 ? labels : ["Нет расходов"],
-          datasets: [{
-            label: 'Расходы по категориям',
-            data: labels.length > 0 ? values : [0],
-            backgroundColor: colors.slice(0, labels.length || 1)
-          }]
+      fetch(baseURL + "/transaction", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${AUTH_TOKEN}`
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            title: { display: true, text: '📊 Расходы по категориям' }
-          }
-        }
-      });
-    })
-    .catch(() => alert("Ошибка загрузки статистики"));
-  }
+        body: JSON.stringify({
+          type: currentType,
+          amount,
+          category: currentType === "expense" ? selectedCategory : null
+        })
+      })
+      .then(res => res.json())
+      .then(() => {
+        cancelForm();
+        loadBalance();
+      })
+      .catch(() => alert("Ошибка соединения с сервером"));
+    }
 
-  // Инициализация
-  loadBalance();
-</script>
+    function loadBalance() {
+      fetch(baseURL + "/transaction", {
+        headers: {
+          "Authorization": `Bearer ${AUTH_TOKEN}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => updateUI(data.balance, data.expenses))
+      .catch(() => alert("Ошибка загрузки баланса"));
+    }
+
+    let chart = null;
+
+    function showStats() {
+      document.getElementById("statsSection").classList.remove("hide");
+      fetchStats();
+    }
+
+    function fetchStats() {
+      const filter = document.getElementById("filterSelect").value;
+
+      fetch(baseURL + `/transaction/statistics?filter=${filter}`, {
+        headers: {
+          "Authorization": `Bearer ${AUTH_TOKEN}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const ctx = document.getElementById("statsCanvas").getContext("2d");
+
+        const labels = Object.keys(data.expenses || {});
+        const values = Object.values(data.expenses || {});
+        const colors = ['#FFB6B9', '#FFD3B6', '#FFFACD', '#D0F0C0', '#C6E2FF', '#E6E6FA', '#FFC0CB', '#F5DEB3', '#CCE5FF'];
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels.length > 0 ? labels : ["Нет расходов"],
+            datasets: [
+              {
+                label: 'Расходы по категориям',
+                data: labels.length > 0 ? values : [0],
+                backgroundColor: colors.slice(0, labels.length || 1)
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              title: { display: true, text: '📊 Расходы по категориям' }
+            }
+          }
+        });
+      })
+      .catch(() => alert("Ошибка загрузки статистики"));
+    }
+
+    loadBalance();
+  </script>
 
 </body>
 </html>
