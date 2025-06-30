@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>💸 Личный Бюджет</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -100,7 +100,7 @@
   </div>
 
   <script>
-    const baseURL = "https://telegrambotmany.ru/api";
+    const baseURL = "https://telegrambotmany.ru/api ";
     const AUTH_TOKEN = "supersecret";
     let currentType = null;
     let selectedCategory = null;
@@ -120,7 +120,10 @@
         return r.json();
       })
       .then(d => updateUI(d.balance, d.expenses))
-      .catch(_ => alert("❌ Ошибка загрузки баланса"));
+      .catch(err => {
+        console.error("Ошибка загрузки баланса:", err);
+        alert("❌ Ошибка загрузки баланса");
+      });
     }
 
     function startIncome() {
@@ -173,7 +176,10 @@
         cancelForm();
         loadBalance();
       })
-      .catch(_ => alert("❌ Ошибка сети при добавлении"));
+      .catch(err => {
+        console.error("Ошибка сети при добавлении:", err);
+        alert("❌ Ошибка сети при добавлении");
+      });
     }
 
     function showStats() {
@@ -202,7 +208,7 @@
             labels: labs.length ? labs : ["Нет расходов"],
             datasets: [{
               label: 'Расходы',
-              data: labs.length ? vals : [0],
+              data: vals.length ? vals : [0],
               backgroundColor: ['#FFB6B9']
             }]
           },
@@ -211,7 +217,10 @@
           }
         });
       })
-      .catch(_ => alert("❌ Ошибка загрузки статистики"));
+      .catch(err => {
+        console.error("Ошибка загрузки статистики:", err);
+        alert("❌ Ошибка загрузки статистики");
+      });
     }
 
     loadBalance();
