@@ -135,8 +135,8 @@
     let currentType = null;
     let selectedCategory = null;
 
-   const baseURL = "https://telegrambotmany.ru"; // 👈 Заменить при необходимости
-    const AUTH_TOKEN = "supersecret"; // 👈 Должен совпадать с many.py
+    const baseURL = "https://telegrambotmany.ru"; // ✅ Удалён лишний /api
+    const AUTH_TOKEN = "supersecret";
 
     function updateUI(balance = 0, expenses = 0) {
       document.getElementById("balance").textContent = balance.toFixed(2);
@@ -170,7 +170,7 @@
       if (!amount || amount <= 0) return alert("Введите корректную сумму");
       if (currentType === "expense" && !selectedCategory) return alert("Выберите категорию");
 
-      fetch(baseURL + "/transaction", {
+      fetch(baseURL + "/api/transaction", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -191,7 +191,7 @@
     }
 
     function loadBalance() {
-      fetch(baseURL + "/transaction", {
+      fetch(baseURL + "/api/transaction", {
         headers: {
           "Authorization": `Bearer ${AUTH_TOKEN}`
         }
@@ -211,7 +211,7 @@
     function fetchStats() {
       const filter = document.getElementById("filterSelect").value;
 
-      fetch(baseURL + `/transaction/statistics?filter=${filter}`, {
+      fetch(baseURL + `/api/transaction/statistics?filter=${filter}`, {
         headers: {
           "Authorization": `Bearer ${AUTH_TOKEN}`
         }
