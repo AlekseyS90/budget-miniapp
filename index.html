@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>💸 Личный Бюджет</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f7f4f1;
+      background-color: #fdfaf6;
       color: #333;
       margin: 0;
       padding: 20px;
-      max-width: 420px;
+      max-width: 480px;
       margin: auto;
     }
 
@@ -20,17 +20,17 @@
       color: #6d4c41;
     }
 
-    .summary {
+    .summary, .form-block, .stats-block {
       background-color: #fff8f0;
       padding: 15px;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       text-align: center;
     }
 
     .summary div {
-      font-size: 20px;
+      font-size: 18px;
       margin: 10px 0;
     }
 
@@ -57,15 +57,6 @@
       margin: 4px 1%;
     }
 
-    #form {
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      display: none;
-      margin-top: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-
     input[type="number"] {
       font-size: 18px;
       width: 100%;
@@ -75,71 +66,77 @@
       border-radius: 8px;
     }
 
-    .hide {
-      display: none;
+    canvas {
+      margin-top: 15px;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
   <h1>💸 Мой Бюджет</h1>
 
-  <div class="summary">
-    <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
-    <div>📉 Расходы в этом месяце: <span id="expenses">0.00</span> ₽</div>
+  <div id="mainBlock">
+    <div class="summary">
+      <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
+      <div>📉 Расходы в этом месяце: <span id="expenses">0.00</span> ₽</div>
+    </div>
+
+    <button onclick="startIncome()">➕ Поступление</button>
+    <button onclick="startExpense()">➖ Расход</button>
+    <button onclick="showStats()">📊 Статистика</button>
   </div>
 
-  <button onclick="startIncome()">➕ Поступление</button>
-  <button onclick="startExpense()">➖ Расход</button>
-  <button onclick="getStats()">📊 Статистика</button>
-
-  <div id="form">
-    <div id="categoryButtons" class="hide">
-      <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
+  <div id="formBlock" class="form-block" style="display:none;">
+    <div id="categoryButtons" style="display:none;">
+      <button onclick="selectCategory('Продукты')">🛍️ Продукты</button>
       <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
       <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
       <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
       <button onclick="selectCategory('Рестораны')">🍽️ Рестораны</button>
       <button onclick="selectCategory('Аптека')">💊 Аптека</button>
       <button onclick="selectCategory('Алкоголь')">🍷 Алкоголь</button>
-      <button onclick="selectCategory('Дом')">🏠 Дом</button>
+      <button onclick="selectCategory('Дом')">🏡 Дом</button>
       <button onclick="selectCategory('Разное')">🎁 Разное</button>
     </div>
-
-    <input id="amount" type="number" placeholder="Введите сумму ₽" />
+    <input id="amount" type="number" placeholder="Введите сумму ₽">
     <button onclick="submitForm()">✅ Подтвердить</button>
-    <button onclick="cancelForm()">❌ Отмена</button>
+    <button onclick="showMain()">❌ Отмена</button>
+  </div>
+
+  <div id="statsBlock" class="stats-block" style="display:none;">
+    <h3>📊 Статистика</h3>
+    <canvas id="expensesChart"></canvas>
+    <canvas id="incomeChart"></canvas>
+    <button onclick="showMain()">⬅️ Назад</button>
   </div>
 
   <script>
     let currentType = null;
     let selectedCategory = null;
 
-    function updateUI(balance = 0, expenses = 0) {
-      document.getElementById("balance").textContent = balance.toFixed(2);
-      document.getElementById("expenses").textContent = expenses.toFixed(2);
+    function showMain() {
+      document.getElementById("mainBlock").style.display = "block";
+      document.getElementById("formBlock").style.display = "none";
+      document.getElementById("statsBlock").style.display = "none";
+      selectedCategory = null;
     }
 
     function startIncome() {
       currentType = "income";
-      document.getElementById("categoryButtons").classList.add("hide");
-      document.getElementById("form").style.display = "block";
+      document.getElementById("categoryButtons").style.display = "none";
+      document.getElementById("formBlock").style.display = "block";
+      document.getElementById("mainBlock").style.display = "none";
     }
 
     function startExpense() {
       currentType = "expense";
-      document.getElementById("categoryButtons").classList.remove("hide");
-      document.getElementById("form").style.display = "block";
+      document.getElementById("categoryButtons").style.display = "block";
+      document.getElementById("formBlock").style.display = "block";
+      document.getElementById("mainBlock").style.display = "none";
     }
 
     function selectCategory(cat) {
       selectedCategory = cat;
-    }
-
-    function cancelForm() {
-      document.getElementById("form").style.display = "none";
-      selectedCategory = null;
-      document.getElementById("amount").value = "";
     }
 
     function submitForm() {
@@ -148,43 +145,68 @@
         alert("Введите корректную сумму");
         return;
       }
-
       if (currentType === "expense" && !selectedCategory) {
         alert("Выберите категорию");
         return;
       }
-
       fetch("https://telegrambotmany.ru/api/transaction", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: currentType,
           amount,
-          category: currentType === "expense" ? selectedCategory : null,
-        }),
-      })
-        .then((res) => res.json())
-        .then(() => {
-          cancelForm();
-          loadBalance();
+          category: currentType === "expense" ? selectedCategory : null
         })
-        .catch(() => alert("Ошибка соединения с сервером"));
-    }
-
-    function getStats() {
-      window.open("https://alekseys90.github.io/budget-miniapp/statistics.html", "_blank");
+      }).then(() => {
+        document.getElementById("amount").value = "";
+        showMain();
+        loadBalance();
+      });
     }
 
     function loadBalance() {
       fetch("https://telegrambotmany.ru/api/transaction")
-        .then((res) => res.json())
-        .then((data) => {
-          updateUI(data.balance, data.expenses);
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("balance").textContent = data.balance.toFixed(2);
+          document.getElementById("expenses").textContent = data.expenses.toFixed(2);
         });
+    }
+
+    function showStats() {
+      document.getElementById("mainBlock").style.display = "none";
+      document.getElementById("statsBlock").style.display = "block";
+      fetch("https://telegrambotmany.ru/api/transaction/statistics")
+        .then(res => res.json())
+        .then(data => {
+          const exp = data.expenses || {};
+          const inc = data.income || {};
+
+          drawChart("expensesChart", Object.keys(exp), Object.values(exp), "Расходы");
+          drawChart("incomeChart", Object.keys(inc), Object.values(inc), "Приходы");
+        })
+        .catch(() => alert("Ошибка загрузки статистики"));
+    }
+
+    function drawChart(id, labels, data, label) {
+      new Chart(document.getElementById(id), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label,
+            data,
+            backgroundColor: "#ffcc80"
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
     }
 
     loadBalance();
   </script>
-
 </body>
 </html>
