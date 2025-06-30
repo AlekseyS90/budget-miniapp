@@ -76,38 +76,29 @@
       border-radius: 8px;
     }
 
-    .modal {
+    .hide {
       display: none;
+    }
+
+    .modal {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
     }
 
     .modal-content {
-      background: white;
+      background-color: #fff;
       padding: 20px;
-      border-radius: 12px;
-      max-width: 420px;
+      border-radius: 15px;
+      max-width: 400px;
       width: 90%;
-    }
-
-    canvas {
-      margin-top: 15px;
-      width: 100% !important;
-      height: auto !important;
-    }
-
-    .hide {
-      display: none;
     }
   </style>
 </head>
 <body>
-
   <h1>💸 Мой Бюджет</h1>
 
   <div class="summary">
@@ -121,7 +112,7 @@
 
   <div id="form">
     <div id="categoryButtons" class="hide">
-      <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
+      <button onclick="selectCategory('Продукты')">🛍️ Продукты</button>
       <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
       <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
       <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
@@ -137,9 +128,12 @@
     <button onclick="cancelForm()">❌ Отмена</button>
   </div>
 
-  <!-- Модальное окно со статистикой -->
   <div class="modal" id="statsModal">
     <div class="modal-content">
+      <select id="statsRange" onchange="showStats()">
+        <option value="month">За месяц</option>
+        <option value="week">За неделю</option>
+      </select>
       <h3>📊 Расходы по категориям</h3>
       <canvas id="expenseChart"></canvas>
       <h3 style="margin-top: 20px;">💰 Поступления по дням</h3>
@@ -176,7 +170,6 @@
     function cancelForm() {
       document.getElementById("form").style.display = "none";
       selectedCategory = null;
-      document.getElementById("amount").value = "";
     }
 
     function submitForm() {
@@ -185,7 +178,6 @@
         alert("Введите корректную сумму");
         return;
       }
-
       if (currentType === "expense" && !selectedCategory) {
         alert("Выберите категорию");
         return;
@@ -201,11 +193,64 @@
         })
       })
       .then(res => res.json())
-      .then(data => {
+      .then(() => {
         cancelForm();
         loadBalance();
       })
       .catch(() => alert("Ошибка соединения с сервером"));
+    }
+
+    function drawExpenseChart(data) {
+      new Chart(document.getElementById("expenseChart"), {
+        type: "doughnut",
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            data: Object.values(data),
+            backgroundColor: ["#ffb74d", "#81c784", "#4fc3f7", "#9575cd", "#e57373"]
+          }]
+        }
+      });
+    }
+
+    function drawIncomeChart(data) {
+      new Chart(document.getElementById("incomeChart"), {
+        type: "bar",
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            label: "Поступления",
+            data: Object.values(data),
+            backgroundColor: "#64b5f6"
+          }]
+        }
+      });
+    }
+
+    function showStats() {
+      const range = document.getElementById("statsRange").value;
+      fetch(`https://telegrambotmany.ru/api/transaction/statistics?range=${range}`)
+        .then(r => r.json())
+        .then(data => {
+          const expenses = data.expenses_by_category;
+          const incomesDay = data.income_by_day;
+
+          if (!Object.keys(expenses).length && !Object.keys(incomesDay).length) {
+            alert("Нет данных для статистики");
+            return;
+          }
+
+          document.getElementById("statsModal").style.display = "flex";
+          setTimeout(() => {
+            drawExpenseChart(expenses);
+            drawIncomeChart(incomesDay);
+          }, 100);
+        })
+        .catch(() => alert("Ошибка загрузки статистики"));
+    }
+
+    function closeStats() {
+      document.getElementById("statsModal").style.display = "none";
     }
 
     function loadBalance() {
@@ -214,72 +259,6 @@
         .then(data => {
           updateUI(data.balance, data.expenses);
         });
-    }
-
-    function showStats() {
-      fetch("https://telegrambotmany.ru/api/transaction/statistics")
-        .then(res => res.json())
-        .then(data => {
-          if (!data.expenses || !data.income_by_day) {
-            alert("Нет данных для статистики");
-            return;
-          }
-
-          document.getElementById("statsModal").style.display = "flex";
-          setTimeout(() => {
-            drawExpenseChart(data.expenses);
-            drawIncomeChart(data.income_by_day);
-          }, 100);
-        })
-        .catch(err => {
-          alert("Ошибка загрузки статистики");
-          console.error(err);
-        });
-    }
-
-    function closeStats() {
-      document.getElementById("statsModal").style.display = "none";
-    }
-
-    function drawExpenseChart(expenses) {
-      const ctx = document.getElementById("expenseChart").getContext("2d");
-      new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels: Object.keys(expenses),
-          datasets: [{
-            data: Object.values(expenses),
-            backgroundColor: [
-              "#ffab91", "#ce93d8", "#81d4fa", "#a5d6a7", "#fff59d", "#f48fb1", "#bcaaa4", "#ffcc80", "#e6ee9c"
-            ]
-          }]
-        }
-      });
-    }
-
-    function drawIncomeChart(incomes) {
-      const ctx = document.getElementById("incomeChart").getContext("2d");
-      const labels = Object.keys(incomes);
-      const values = Object.values(incomes);
-
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [{
-            label: "Поступления ₽",
-            data: values,
-            backgroundColor: "#81d4fa"
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
     }
 
     loadBalance();
