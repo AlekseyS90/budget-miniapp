@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>💸 Личный Бюджет</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -14,10 +14,12 @@
       padding: 20px;
       max-width: 420px;
     }
+
     h1 {
       text-align: center;
       color: #6d4c41;
     }
+
     .summary {
       background-color: #fff8f0;
       padding: 15px;
@@ -26,10 +28,12 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
       text-align: center;
     }
+
     .summary div {
       font-size: 20px;
       margin: 10px 0;
     }
+
     button {
       display: block;
       width: 100%;
@@ -42,14 +46,17 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     button:hover {
       background-color: #ffcc80;
     }
+
     #categoryButtons button {
       width: 48%;
       display: inline-block;
       margin: 4px 1%;
     }
+
     #form {
       background-color: #fff;
       padding: 15px;
@@ -58,6 +65,7 @@
       margin-top: 15px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
+
     input[type="number"] {
       font-size: 18px;
       width: 100%;
@@ -66,10 +74,12 @@
       border: 1px solid #ccc;
       border-radius: 8px;
     }
+
     #statsCanvas {
       max-width: 100%;
       margin-top: 20px;
     }
+
     select {
       font-size: 16px;
       margin: 10px 0;
@@ -78,13 +88,12 @@
       width: 100%;
       border: 1px solid #ccc;
     }
+
     .hide { display: none; }
   </style>
 </head>
 <body>
-
   <h1>💸 Мой Бюджет</h1>
-
   <div class="summary">
     <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
     <div>📉 Расходы за месяц: <span id="expenses">0.00</span> ₽</div>
@@ -106,7 +115,7 @@
       <button onclick="selectCategory('Дом')">🏠 Дом</button>
       <button onclick="selectCategory('Разное')">🎁 Разное</button>
     </div>
-    <input id="amount" type="number" placeholder="Введите сумму ₽">
+    <input id="amount" type="number" placeholder="Сумма ₽" />
     <button onclick="submitForm()">✅ Подтвердить</button>
     <button onclick="cancelForm()">❌ Отмена</button>
   </div>
@@ -114,37 +123,47 @@
   <div id="statsSection" class="hide">
     <select id="filterSelect" onchange="fetchStats()">
       <option value="week">За неделю</option>
-      <option value="month" selected>За месяц</option>
+      <option value="month">За месяц</option>
     </select>
     <canvas id="statsCanvas"></canvas>
   </div>
 
   <script>
-    const baseURL = "https://telegrambotmany.ru";
+    const baseURL = "https://telegrambotmany.ru/api";
     const AUTH_TOKEN = "supersecret";
-    let currentType = null;
-    let selectedCategory = null;
-    let chart = null;
+    let currentType, selectedCategory, chart;
 
-    function updateUI(balance = 0, expenses = 0) {
-      document.getElementById("balance").textContent = balance.toFixed(2);
-      document.getElementById("expenses").textContent = expenses.toFixed(2);
+    function updateUI(b, e) {
+      document.getElementById("balance").textContent = b.toFixed(2);
+      document.getElementById("expenses").textContent = e.toFixed(2);
+    }
+
+    function loadBalance() {
+      fetch(baseURL + "/transaction", {
+        headers: { "Authorization": "Bearer " + AUTH_TOKEN }
+      })
+        .then(r => r.json())
+        .then(d => updateUI(d.balance, d.expenses))
+        .catch(_ => alert("Ошибка загрузки баланса"));
     }
 
     function startIncome() {
       currentType = "income";
-      document.getElementById("categoryButtons").classList.add("hide");
-      document.getElementById("form").style.display = "block";
+      openForm(false);
     }
 
     function startExpense() {
       currentType = "expense";
-      document.getElementById("categoryButtons").classList.remove("hide");
-      document.getElementById("form").style.display = "block";
+      openForm(true);
     }
 
-    function selectCategory(cat) {
-      selectedCategory = cat;
+    function openForm(showCats) {
+      document.getElementById("form").style.display = "block";
+      document.getElementById("categoryButtons").classList.toggle("hide", !showCats);
+    }
+
+    function selectCategory(c) {
+      selectedCategory = c;
     }
 
     function cancelForm() {
@@ -154,39 +173,28 @@
     }
 
     function submitForm() {
-      const amount = parseFloat(document.getElementById("amount").value);
-      if (!amount || amount <= 0) return alert("Введите корректную сумму");
+      const val = parseFloat(document.getElementById("amount").value);
+      if (!val || val <= 0) return alert("Введите сумму");
       if (currentType === "expense" && !selectedCategory) return alert("Выберите категорию");
 
-      fetch(baseURL + "/api/transaction", {
+      fetch(baseURL + "/transaction", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${AUTH_TOKEN}`
+          "Authorization": "Bearer " + AUTH_TOKEN
         },
         body: JSON.stringify({
           type: currentType,
-          amount,
+          amount: val,
           category: currentType === "expense" ? selectedCategory : null
         })
       })
-      .then(res => res.json())
-      .then(() => {
-        cancelForm();
-        loadBalance();
-      })
-      .catch(() => alert("Ошибка соединения с сервером"));
-    }
-
-    function loadBalance() {
-      fetch(baseURL + "/api/transaction", {
-        headers: {
-          "Authorization": `Bearer ${AUTH_TOKEN}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => updateUI(data.balance, data.expenses))
-      .catch(() => alert("❌ Ошибка загрузки баланса"));
+        .then(r => r.json())
+        .then(_ => {
+          cancelForm();
+          loadBalance();
+        })
+        .catch(_ => alert("Ошибка сети"));
     }
 
     function showStats() {
@@ -195,43 +203,32 @@
     }
 
     function fetchStats() {
-      const filter = document.getElementById("filterSelect").value;
-
-      fetch(baseURL + `/api/transaction/statistics?filter=${filter}`, {
-        headers: {
-          "Authorization": `Bearer ${AUTH_TOKEN}`
-        }
+      const f = document.getElementById("filterSelect").value;
+      fetch(baseURL + `/transaction/statistics?filter=${f}`, {
+        headers: { "Authorization": "Bearer " + AUTH_TOKEN }
       })
-      .then(res => res.json())
-      .then(data => {
-        const ctx = document.getElementById("statsCanvas").getContext("2d");
-
-        const labels = Object.keys(data.expenses || {});
-        const values = Object.values(data.expenses || {});
-        const colors = ['#FFB6B9', '#FFD3B6', '#FFFACD', '#D0F0C0', '#C6E2FF', '#E6E6FA', '#FFC0CB', '#F5DEB3', '#CCE5FF'];
-
-        if (chart) chart.destroy();
-
-        chart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: labels.length > 0 ? labels : ["Нет данных"],
-            datasets: [{
-              label: 'Расходы по категориям',
-              data: labels.length > 0 ? values : [0],
-              backgroundColor: colors.slice(0, labels.length || 1)
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { display: false },
-              title: { display: true, text: '📊 Расходы по категориям' }
+        .then(r => r.json())
+        .then(d => {
+          const ctx = document.getElementById("statsCanvas").getContext("2d");
+          const labs = Object.keys(d.expenses || {});
+          const vals = Object.values(d.expenses || {});
+          if (chart) chart.destroy();
+          chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labs.length ? labs : ["Нет"],
+              datasets: [{
+                label: 'Расходы',
+                data: labs.length ? vals : [0],
+                backgroundColor: ['#FFB6B9']
+              }]
+            },
+            options: {
+              plugins: { legend: { display: false } }
             }
-          }
-        });
-      })
-      .catch(() => alert("❌ Ошибка загрузки статистики"));
+          });
+        })
+        .catch(_ => alert("Ошибка загрузки статистики"));
     }
 
     loadBalance();
