@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 Статистика</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #f8f5f2;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #444;
+    }
+    h2 {
+      text-align: center;
+    }
+    .chart-container {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Моя Статистика</h2>
+  <div class="chart-container">
+    <canvas id="expensesChart"></canvas>
+  </div>
+  <div class="chart-container">
+    <canvas id="incomeChart"></canvas>
+  </div>
+
+  <script>
+    fetch("https://telegrambotmany.ru/api/transaction/statistics")
+      .then(res => res.json())
+      .then(data => {
+        if (!data.expenses || !data.income) {
+          alert("Нет данных для отображения");
+          return;
+        }
+
+        const ctx1 = document.getElementById("expensesChart");
+        new Chart(ctx1, {
+          type: "doughnut",
+          data: {
+            labels: data.expenses.map(e => e.category),
+            datasets: [{
+              label: "Расходы",
+              data: data.expenses.map(e => e.total),
+              backgroundColor: [
+                "#FFB74D", "#E57373", "#4DB6AC", "#9575CD", "#F06292", "#64B5F6", "#81C784"
+              ]
+            }]
+          }
+        });
+
+        const ctx2 = document.getElementById("incomeChart");
+        new Chart(ctx2, {
+          type: "bar",
+          data: {
+            labels: data.income.map(i => i.date),
+            datasets: [{
+              label: "Поступления",
+              data: data.income.map(i => i.total),
+              backgroundColor: "#4CAF50"
+            }]
+          }
+        });
+      })
+      .catch(() => alert("Ошибка загрузки статистики"));
+  </script>
+</body>
+</html>
