@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>💸 Личный Бюджет</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -79,26 +78,10 @@
     .hide {
       display: none;
     }
-
-    .modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0, 0, 0, 0.4);
-      display: none;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      max-width: 400px;
-      width: 90%;
-    }
   </style>
 </head>
 <body>
+
   <h1>💸 Мой Бюджет</h1>
 
   <div class="summary">
@@ -108,11 +91,11 @@
 
   <button onclick="startIncome()">➕ Поступление</button>
   <button onclick="startExpense()">➖ Расход</button>
-  <button onclick="showStats()">📊 Статистика</button>
+  <button onclick="getStats()">📊 Статистика</button>
 
   <div id="form">
     <div id="categoryButtons" class="hide">
-      <button onclick="selectCategory('Продукты')">🛍️ Продукты</button>
+      <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
       <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
       <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
       <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
@@ -123,23 +106,9 @@
       <button onclick="selectCategory('Разное')">🎁 Разное</button>
     </div>
 
-    <input id="amount" type="number" placeholder="Введите сумму ₽">
+    <input id="amount" type="number" placeholder="Введите сумму ₽" />
     <button onclick="submitForm()">✅ Подтвердить</button>
     <button onclick="cancelForm()">❌ Отмена</button>
-  </div>
-
-  <div class="modal" id="statsModal">
-    <div class="modal-content">
-      <select id="statsRange" onchange="showStats()">
-        <option value="month">За месяц</option>
-        <option value="week">За неделю</option>
-      </select>
-      <h3>📊 Расходы по категориям</h3>
-      <canvas id="expenseChart"></canvas>
-      <h3 style="margin-top: 20px;">💰 Поступления по дням</h3>
-      <canvas id="incomeChart"></canvas>
-      <button onclick="closeStats()">❌ Закрыть</button>
-    </div>
   </div>
 
   <script>
@@ -170,6 +139,7 @@
     function cancelForm() {
       document.getElementById("form").style.display = "none";
       selectedCategory = null;
+      document.getElementById("amount").value = "";
     }
 
     function submitForm() {
@@ -178,6 +148,7 @@
         alert("Введите корректную сумму");
         return;
       }
+
       if (currentType === "expense" && !selectedCategory) {
         alert("Выберите категорию");
         return;
@@ -185,83 +156,35 @@
 
       fetch("https://telegrambotmany.ru/api/transaction", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: currentType,
           amount,
-          category: currentType === "expense" ? selectedCategory : null
-        })
+          category: currentType === "expense" ? selectedCategory : null,
+        }),
       })
-      .then(res => res.json())
-      .then(() => {
-        cancelForm();
-        loadBalance();
-      })
-      .catch(() => alert("Ошибка соединения с сервером"));
-    }
-
-    function drawExpenseChart(data) {
-      new Chart(document.getElementById("expenseChart"), {
-        type: "doughnut",
-        data: {
-          labels: Object.keys(data),
-          datasets: [{
-            data: Object.values(data),
-            backgroundColor: ["#ffb74d", "#81c784", "#4fc3f7", "#9575cd", "#e57373"]
-          }]
-        }
-      });
-    }
-
-    function drawIncomeChart(data) {
-      new Chart(document.getElementById("incomeChart"), {
-        type: "bar",
-        data: {
-          labels: Object.keys(data),
-          datasets: [{
-            label: "Поступления",
-            data: Object.values(data),
-            backgroundColor: "#64b5f6"
-          }]
-        }
-      });
-    }
-
-    function showStats() {
-      const range = document.getElementById("statsRange").value;
-      fetch(`https://telegrambotmany.ru/api/transaction/statistics?range=${range}`)
-        .then(r => r.json())
-        .then(data => {
-          const expenses = data.expenses_by_category;
-          const incomesDay = data.income_by_day;
-
-          if (!Object.keys(expenses).length && !Object.keys(incomesDay).length) {
-            alert("Нет данных для статистики");
-            return;
-          }
-
-          document.getElementById("statsModal").style.display = "flex";
-          setTimeout(() => {
-            drawExpenseChart(expenses);
-            drawIncomeChart(incomesDay);
-          }, 100);
+        .then((res) => res.json())
+        .then(() => {
+          cancelForm();
+          loadBalance();
         })
-        .catch(() => alert("Ошибка загрузки статистики"));
+        .catch(() => alert("Ошибка соединения с сервером"));
     }
 
-    function closeStats() {
-      document.getElementById("statsModal").style.display = "none";
+    function getStats() {
+      window.open("https://alekseys90.github.io/budget-miniapp/statistics.html", "_blank");
     }
 
     function loadBalance() {
       fetch("https://telegrambotmany.ru/api/transaction")
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           updateUI(data.balance, data.expenses);
         });
     }
 
     loadBalance();
   </script>
+
 </body>
 </html>
