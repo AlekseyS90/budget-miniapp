@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>💸 Личный Бюджет</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -100,7 +100,7 @@
   </div>
 
   <script>
-    const baseURL = "https://telegrambotmany.ru/api/ "; // ✅ Обязательно со слэшем в конце!
+    const baseURL = "https://telegrambotmany.ru/api/";
     const AUTH_TOKEN = "supersecret";
     let currentType = null;
     let selectedCategory = null;
@@ -112,17 +112,27 @@
     }
 
     function loadBalance() {
+      console.log("Fetching balance from:", baseURL + "transaction");
       fetch(baseURL + "transaction", {
         headers: { "Authorization": "Bearer " + AUTH_TOKEN }
       })
       .then(r => {
-        if (!r.ok) throw new Error("Сервер вернул ошибку");
+        console.log("Response status:", r.status);
+        if (!r.ok) {
+          return r.text().then(text => {
+            console.error("Server response:", text);
+            throw new Error(`HTTP error! status: ${r.status}`);
+          });
+        }
         return r.json();
       })
-      .then(d => updateUI(d.balance, d.expenses))
+      .then(d => {
+        console.log("Received data:", d);
+        updateUI(d.balance, d.expenses);
+      })
       .catch(err => {
         console.error("Ошибка загрузки баланса:", err);
-        alert("❌ Ошибка загрузки баланса");
+        alert("❌ Ошибка загрузки баланса: " + err.message);
       });
     }
 
@@ -143,6 +153,7 @@
 
     function selectCategory(c) {
       selectedCategory = c;
+      console.log("Selected category:", c);
     }
 
     function cancelForm() {
@@ -156,6 +167,8 @@
       if (!amount || amount <= 0) return alert("Введите сумму");
       if (currentType === "expense" && !selectedCategory) return alert("Выберите категорию");
 
+      console.log("Submitting:", { type: currentType, amount, category: selectedCategory });
+      
       fetch(baseURL + "transaction", {
         method: "POST",
         headers: {
@@ -169,7 +182,12 @@
         })
       })
       .then(r => {
-        if (!r.ok) throw new Error("Ошибка при отправке");
+        if (!r.ok) {
+          return r.text().then(text => {
+            console.error("Server response:", text);
+            throw new Error(`HTTP error! status: ${r.status}`);
+          });
+        }
         return r.json();
       })
       .then(() => {
@@ -178,7 +196,7 @@
       })
       .catch(err => {
         console.error("Ошибка сети при добавлении:", err);
-        alert("❌ Ошибка сети при добавлении");
+        alert("❌ Ошибка сети при добавлении: " + err.message);
       });
     }
 
@@ -189,15 +207,22 @@
 
     function fetchStats() {
       const f = document.getElementById("filterSelect").value;
+      console.log("Fetching stats with filter:", f);
 
       fetch(baseURL + `transaction/statistics?filter=${f}`, {
         headers: { "Authorization": "Bearer " + AUTH_TOKEN }
       })
       .then(r => {
-        if (!r.ok) throw new Error("Ошибка при получении статистики");
+        if (!r.ok) {
+          return r.text().then(text => {
+            console.error("Server response:", text);
+            throw new Error(`HTTP error! status: ${r.status}`);
+          });
+        }
         return r.json();
       })
       .then(d => {
+        console.log("Stats data:", d);
         const ctx = document.getElementById("statsCanvas").getContext("2d");
         const labs = Object.keys(d.expenses || {});
         const vals = Object.values(d.expenses || {});
@@ -219,11 +244,14 @@
       })
       .catch(err => {
         console.error("Ошибка загрузки статистики:", err);
-        alert("❌ Ошибка загрузки статистики");
+        alert("❌ Ошибка загрузки статистики: " + err.message);
       });
     }
 
-    loadBalance();
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBalance();
+    });
   </script>
 </body>
 </html>
