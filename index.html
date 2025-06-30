@@ -1,18 +1,30 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>💸 Личный Бюджет</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f7f4f1;
+      background-color: #fdf8f5;
       color: #333;
-      margin: 0 auto;
+      margin: 0;
       padding: 20px;
       max-width: 420px;
+      margin: auto;
+    }
+
+    .splash {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .splash img {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      margin-bottom: 10px;
     }
 
     h1 {
@@ -75,26 +87,17 @@
       border-radius: 8px;
     }
 
-    #statsCanvas {
-      max-width: 100%;
-      margin-top: 20px;
+    .hide {
+      display: none;
     }
-
-    select {
-      font-size: 16px;
-      margin: 10px 0;
-      padding: 8px;
-      border-radius: 8px;
-      width: 100%;
-      border: 1px solid #ccc;
-    }
-
-    .hide { display: none; }
   </style>
 </head>
 <body>
 
-  <h1>💸 Мой Бюджет</h1>
+  <div class="splash">
+    <img src="https://cdn-icons-png.flaticon.com/512/1063/1063393.png" alt="icon">
+    <h1>💸 Мой Бюджет</h1>
+  </div>
 
   <div class="summary">
     <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
@@ -103,7 +106,7 @@
 
   <button onclick="startIncome()">➕ Поступление</button>
   <button onclick="startExpense()">➖ Расход</button>
-  <button onclick="showStats()">📊 Статистика</button>
+  <button onclick="getStats()">📊 Статистика</button>
 
   <div id="form">
     <div id="categoryButtons" class="hide">
@@ -123,18 +126,10 @@
     <button onclick="cancelForm()">❌ Отмена</button>
   </div>
 
-  <div id="statsSection" class="hide">
-    <select id="filterSelect" onchange="fetchStats()">
-      <option value="week">За неделю</option>
-      <option value="month">За месяц</option>
-    </select>
-    <canvas id="statsCanvas"></canvas>
-  </div>
-
   <script>
     let currentType = null;
     let selectedCategory = null;
-    const baseURL = "https://telegrambotmany.ru/api";
+    const token = "my_secure_token";  // Замените, если токен будет меняться
 
     function updateUI(balance = 0, expenses = 0) {
       document.getElementById("balance").textContent = balance.toFixed(2);
@@ -164,10 +159,17 @@
 
     function submitForm() {
       const amount = parseFloat(document.getElementById("amount").value);
-      if (!amount || amount <= 0) return alert("Введите корректную сумму");
-      if (currentType === "expense" && !selectedCategory) return alert("Выберите категорию");
+      if (!amount || amount <= 0) {
+        alert("Введите корректную сумму");
+        return;
+      }
 
-      fetch(baseURL + "/transaction", {
+      if (currentType === "expense" && !selectedCategory) {
+        alert("Выберите категорию");
+        return;
+      }
+
+      fetch(`https://telegrambotmany.ru/api/transaction?token=${token}`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -184,60 +186,47 @@
       .catch(() => alert("Ошибка соединения с сервером"));
     }
 
-    function loadBalance() {
-      fetch(baseURL + "/transaction")
-        .then(res => res.json())
-        .then(data => updateUI(data.balance, data.expenses));
-    }
-
-    let chart = null;
-
-    function showStats() {
-      document.getElementById("statsSection").classList.remove("hide");
-      fetchStats();
-    }
-
-    function fetchStats() {
-      const filter = document.getElementById("filterSelect").value;
-
-      fetch(baseURL + `/transaction/statistics?filter=${filter}`)
+    function getStats() {
+      fetch(`https://telegrambotmany.ru/api/transaction/statistics?token=${token}`)
         .then(res => res.json())
         .then(data => {
-          const ctx = document.getElementById("statsCanvas").getContext("2d");
+          let msg = "📊 Статистика:\n";
 
-          const labels = Object.keys(data.expenses || {});
-          const values = Object.values(data.expenses || {});
-          const incomeDays = data.income_days || {};
-
-          const colors = ['#FFB6B9', '#FFD3B6', '#FFFACD', '#D0F0C0', '#C6E2FF', '#E6E6FA', '#FFC0CB', '#F5DEB3', '#CCE5FF'];
-
-          if (chart) chart.destroy();
-
-          chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: labels.length > 0 ? labels : ["Нет расходов"],
-              datasets: [
-                {
-                  label: 'Расходы по категориям',
-                  data: labels.length > 0 ? values : [0],
-                  backgroundColor: colors.slice(0, labels.length || 1)
-                }
-              ]
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: { display: false },
-                title: { display: true, text: '📊 Расходы по категориям' }
-              }
+          if (Object.keys(data.expenses).length > 0) {
+            msg += "\n💸 Расходы по категориям:\n";
+            for (let [cat, val] of Object.entries(data.expenses)) {
+              msg += `• ${cat}: ${val.toFixed(2)} ₽\n`;
             }
-          });
+          } else {
+            msg += "\nНет данных по расходам.\n";
+          }
+
+          if (Object.keys(data.income).length > 0) {
+            msg += "\n💰 Поступления по дням:\n";
+            for (let [day, val] of Object.entries(data.income)) {
+              msg += `${day}: ${val.toFixed(2)} ₽\n`;
+            }
+          }
+
+          alert(msg);
         })
         .catch(() => alert("Ошибка загрузки статистики"));
     }
 
-    loadBalance();
+    function loadBalance() {
+      fetch(`https://telegrambotmany.ru/api/transaction?token=${token}`)
+        .then(res => res.json())
+        .then(data => {
+          updateUI(data.balance, data.expenses);
+        });
+    }
+
+    // Проверка что открыто внутри Telegram
+    if (navigator.userAgent.includes("Telegram")) {
+      loadBalance();
+    } else {
+      document.body.innerHTML = "<p style='text-align:center; padding:20px;'>⛔️ Это мини-приложение доступно только внутри Telegram</p>";
+    }
   </script>
 
 </body>
