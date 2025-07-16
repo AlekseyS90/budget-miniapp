@@ -1,61 +1,41 @@
-const API_BASE = "https://insects-knowledge-catalyst-manually.trycloudflare.com";
+let currentRotation = 0;
+let startX = 0;
+let isDragging = false;
 
-async function getBalance() {
-    try {
-        const response = await fetch(`${API_BASE}/api/balance`);
-        if (!response.ok) throw new Error("Ошибка сети");
-        const data = await response.json();
-        document.getElementById("balance").innerText = `${data.balance.toFixed(2)} ₽`;
-    } catch (error) {
-        console.error("Ошибка при получении баланса:", error);
-        document.getElementById("balance").innerText = "Ошибка загрузки";
-    }
-}
+const slider = document.getElementById('slider');
 
-async function sendIncome(amount) {
-    try {
-        const response = await fetch(`${API_BASE}/api/transaction`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "income", amount: Number(amount), category: null})
-        });
-        if (!response.ok) throw new Error("Ошибка сети");
-        await getBalance();
-    } catch (error) {
-        console.error("Ошибка при отправке прихода:", error);
-    }
-}
+// Desktop / Mouse
+slider.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  startX = e.clientX;
+});
 
-async function sendExpense(category, amount) {
-    try {
-        const response = await fetch(`${API_BASE}/api/transaction`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({type: "expense", amount: Number(amount), category})
-        });
-        if (!response.ok) throw new Error("Ошибка сети");
-        await getBalance();
-    } catch (error) {
-        console.error("Ошибка при отправке расхода:", error);
-    }
-}
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+});
 
-// Привязка кнопок и логика на примере, чтобы интегрировать в твой HTML:
-document.getElementById("incomeBtn").onclick = () => {
-    const amount = parseFloat(prompt("Введите сумму прихода:"));
-    if (!isNaN(amount) && amount > 0) {
-        sendIncome(amount);
-    } else alert("Введите корректную сумму");
-};
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  let delta = e.clientX - startX;
+  startX = e.clientX;
+  currentRotation += delta * 0.5;
+  slider.style.transform = `rotateY(${currentRotation}deg)`;
+});
 
-document.getElementById("expenseBtn").onclick = () => {
-    const category = prompt("Введите категорию расхода:");
-    const amount = parseFloat(prompt("Введите сумму расхода:"));
-    if (category && !isNaN(amount) && amount > 0) {
-        sendExpense(category, amount);
-    } else alert("Введите корректные данные");
-};
+// Mobile / Touch
+slider.addEventListener('touchstart', (e) => {
+  isDragging = true;
+  startX = e.touches[0].clientX;
+});
 
-window.onload = () => {
-    getBalance();
-};
+slider.addEventListener('touchend', () => {
+  isDragging = false;
+});
+
+slider.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+  let delta = e.touches[0].clientX - startX;
+  startX = e.touches[0].clientX;
+  currentRotation += delta * 0.5;
+  slider.style.transform = `rotateY(${currentRotation}deg)`;
+});
