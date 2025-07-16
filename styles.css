@@ -1,41 +1,66 @@
+/* Общий сброс и фон */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  font-family: sans-serif;
-  background: #f9f9f9;
-  color: #333;
-  padding: 20px;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #c9d6ff, #e2e2e2);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.container {
   text-align: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
 }
-header h1 {
-  margin-bottom: 10px;
+
+h1 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 20px;
 }
-.balance h2 {
-  margin: 10px 0;
+
+/* Слайдер */
+.slider {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  transform-style: preserve-3d;
+  animation: rotate 20s infinite linear;
+  perspective: 1000px;
 }
-.buttons button {
-  padding: 12px 20px;
-  margin: 5px;
-  border: none;
-  border-radius: 8px;
-  background: #e0e0e0;
-  cursor: pointer;
+
+.slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease;
+  backface-visibility: hidden;
 }
-.buttons button:hover {
-  background: #d1d1d1;
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
-.form-section {
-  margin-top: 20px;
-}
-.form-section input,
-.form-section select {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 5px;
-  width: 80%;
-}
-.hidden {
-  display: none;
-}
-canvas {
-  max-width: 100%;
-  margin-top: 30px;
+
+/* Позиции слайдов */
+.slide:nth-child(1) { transform: rotateY(0deg) translateZ(250px); }
+.slide:nth-child(2) { transform: rotateY(90deg) translateZ(250px); }
+.slide:nth-child(3) { transform: rotateY(180deg) translateZ(250px); }
+.slide:nth-child(4) { transform: rotateY(270deg) translateZ(250px); }
+
+@keyframes rotate {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
 }
