@@ -4,7 +4,7 @@ let isDragging = false;
 
 const slider = document.getElementById('slider');
 
-// Desktop / Mouse
+// Mouse events (desktop/laptop)
 slider.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.clientX;
@@ -22,7 +22,7 @@ window.addEventListener('mousemove', (e) => {
   slider.style.transform = `rotateY(${currentRotation}deg)`;
 });
 
-// Mobile / Touch
+// Touch events (mobile)
 slider.addEventListener('touchstart', (e) => {
   isDragging = true;
   startX = e.touches[0].clientX;
