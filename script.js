@@ -1,11 +1,11 @@
-let currentRotation = 0;
-let startX = 0;
+let rotationY = 0;
 let isDragging = false;
+let startX = 0;
 
-const slider = document.getElementById('slider');
+const cube = document.getElementById('cube');
 
-// Mouse events (desktop/laptop)
-slider.addEventListener('mousedown', (e) => {
+// Desktop
+cube.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.clientX;
 });
@@ -18,24 +18,24 @@ window.addEventListener('mousemove', (e) => {
   if (!isDragging) return;
   let delta = e.clientX - startX;
   startX = e.clientX;
-  currentRotation += delta * 0.5;
-  slider.style.transform = `rotateY(${currentRotation}deg)`;
+  rotationY += delta * 0.4;
+  cube.style.transform = `rotateY(${rotationY}deg)`;
 });
 
-// Touch events (mobile)
-slider.addEventListener('touchstart', (e) => {
+// Mobile
+cube.addEventListener('touchstart', (e) => {
   isDragging = true;
   startX = e.touches[0].clientX;
 });
 
-slider.addEventListener('touchend', () => {
+cube.addEventListener('touchend', () => {
   isDragging = false;
 });
 
-slider.addEventListener('touchmove', (e) => {
+cube.addEventListener('touchmove', (e) => {
   if (!isDragging) return;
   let delta = e.touches[0].clientX - startX;
   startX = e.touches[0].clientX;
-  currentRotation += delta * 0.5;
-  slider.style.transform = `rotateY(${currentRotation}deg)`;
+  rotationY += delta * 0.4;
+  cube.style.transform = `rotateY(${rotationY}deg)`;
 });
