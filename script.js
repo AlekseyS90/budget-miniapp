@@ -1,10 +1,9 @@
 let rotation = 0;
-let startX = 0;
 let isDragging = false;
-
+let startX = 0;
 const cube = document.getElementById('cube');
 
-// Mouse drag
+// Вращение мышью
 cube.addEventListener('mousedown', (e) => {
   isDragging = true;
   startX = e.clientX;
@@ -22,7 +21,7 @@ window.addEventListener('mousemove', (e) => {
   cube.style.transform = `rotateY(${rotation}deg)`;
 });
 
-// Touch drag
+// Вращение пальцем
 cube.addEventListener('touchstart', (e) => {
   isDragging = true;
   startX = e.touches[0].clientX;
@@ -38,4 +37,20 @@ cube.addEventListener('touchmove', (e) => {
   startX = e.touches[0].clientX;
   rotation += delta * 0.5;
   cube.style.transform = `rotateY(${rotation}deg)`;
+});
+
+// Модалка
+const modal = document.getElementById("modal");
+const modalImg = document.getElementById("modalImg");
+const closeModal = document.getElementById("closeModal");
+
+document.querySelectorAll('.face img').forEach(img => {
+  img.addEventListener('click', () => {
+    modal.style.display = "flex";
+    modalImg.src = img.src;
+  });
+});
+
+closeModal.addEventListener('click', () => {
+  modal.style.display = "none";
 });
