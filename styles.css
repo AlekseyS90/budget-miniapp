@@ -5,69 +5,61 @@
 }
 
 body {
-  font-family: 'Segoe UI', sans-serif;
   background: linear-gradient(135deg, #c9d6ff, #e2e2e2);
   height: 100vh;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .container {
-  text-align: center;
   width: 100%;
   max-width: 400px;
   padding: 20px;
 }
 
-h1 {
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 20px;
+.scene {
+  width: 100%;
+  height: 75vh;
+  perspective: 1200px;
+  position: relative;
 }
 
-/* Слайдер */
-.slider {
-  position: relative;
+.cube {
   width: 100%;
-  height: 65vh;
+  height: 100%;
+  position: relative;
   transform-style: preserve-3d;
-  perspective: 1000px;
   transform: rotateY(0deg);
   transition: transform 0.3s ease;
 }
 
-.slide {
+.face {
   position: absolute;
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-.slide img {
-  max-height: 100%;
-  max-width: 100%;
-  height: auto;
-  width: auto;
+.face img {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  aspect-ratio: 3/5;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
 
-/* Позиции слайдов */
-.slide:nth-child(1) { transform: rotateY(0deg) translateZ(250px); }
-.slide:nth-child(2) { transform: rotateY(90deg) translateZ(250px); }
-.slide:nth-child(3) { transform: rotateY(180deg) translateZ(250px); }
-.slide:nth-child(4) { transform: rotateY(270deg) translateZ(250px); }
+/* Расположение сторон куба */
+.face1 { transform: rotateY(0deg) translateZ(200px); }
+.face2 { transform: rotateY(90deg) translateZ(200px); }
+.face3 { transform: rotateY(180deg) translateZ(200px); }
+.face4 { transform: rotateY(270deg) translateZ(200px); }
 
-/* Адаптация под маленькие экраны */
+/* Подстраиваем высоту под низкие экраны */
 @media (max-height: 600px) {
-  .slider {
-    height: 55vh;
+  .scene {
+    height: 60vh;
   }
 }
