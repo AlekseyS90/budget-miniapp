@@ -2,136 +2,19 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>💸 Личный Бюджет</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body{font-family:'Segoe UI';background:#f7f4f1;color:#333;margin:20px auto;max-width:420px}
-    h1{text-align:center;color:#6d4c41}
-    .summary{background:#fff8f0;padding:15px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.05);text-align:center;margin-bottom:20px}
-    .summary div{font-size:20px;margin:8px 0}
-    button{width:100%;padding:12px;margin:8px 0;border:none;border-radius:10px;background:#ffe0b2;font-size:18px;cursor:pointer;transition:.2s}
-    button:hover{background:#ffcc80}
-    #categoryButtons button{width:48%;display:inline-block;margin:4px 1%}
-    #form{background:#fff;padding:15px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,.05);display:none}
-    input,select{width:100%;padding:10px;font-size:18px;border:1px solid #ccc;border-radius:8px;margin-top:10px}
-    #statsCanvas{max-width:100%;margin-top:20px}
-    .hide{display:none}
-    .error{color:red;text-align:center;margin:10px 0}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DRINX | Спецпредложение</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>💸 Мой Бюджет</h1>
-  <div class="summary">
-    <div>💰 Баланс: <span id="balance">0.00</span> ₽</div>
-    <div>📉 Расходы за месяц: <span id="expenses">0.00</span> ₽</div>
-    <div id="error" class="error hide"></div>
-  </div>
-  <button onclick="startIncome()">➕ Поступление</button>
-  <button onclick="startExpense()">➖ Расход</button>
-  <button onclick="showStats()">📊 Статистика</button>
-
-  <div id="form">
-    <div id="categoryButtons" class="hide">
-      <button onclick="selectCategory('Продукты')">🛒 Продукты</button>
-      <button onclick="selectCategory('Курилки')">🚬 Курилки</button>
-      <button onclick="selectCategory('Транспорт')">🚌 Транспорт</button>
-      <button onclick="selectCategory('Каршеринг')">🚗 Каршеринг</button>
-      <button onclick="selectCategory('Рестораны')">🍽 Рестораны</button>
-      <button onclick="selectCategory('Аптека')">💊 Аптека</button>
-      <button onclick="selectCategory('Алкоголь')">🍷 Алкоголь</button>
-      <button onclick="selectCategory('Дом')">🏠 Дом</button>
-      <button onclick="selectCategory('Разное')">🎁 Разное</button>
+  <div class="container">
+    <h1>🔥 Спецпредложения DRINX</h1>
+    <div class="slider">
+      <div class="slide"><img src="images/1.jpg" alt="Вино 1"></div>
+      <div class="slide"><img src="images/2.jpg" alt="Вино 2"></div>
+      <div class="slide"><img src="images/3.jpg" alt="Вино 3"></div>
+      <div class="slide"><img src="images/4.jpg" alt="Вино 4"></div>
     </div>
-    <input id="amount" type="number" placeholder="Сумма ₽"/>
-    <button onclick="submitForm()">✅ Подтвердить</button>
-    <button onclick="cancelForm()">❌ Отмена</button>
   </div>
-
-  <div id="statsSection" class="hide">
-    <select id="filterSelect" onchange="fetchStats()">
-      <option value="week">За неделю</option>
-      <option value="month">За месяц</option>
-    </select>
-    <canvas id="statsCanvas"></canvas>
-  </div>
-
-  <script>
-    const base = "https://telegrambotmany.ru/api";
-    const TOKEN = "supersecret";
-    let currType, selCat, chart;
-
-    function updateUI(b,e){
-      document.getElementById("balance").textContent = b.toFixed(2);
-      document.getElementById("expenses").textContent = e.toFixed(2);
-      document.getElementById("error").classList.add("hide");
-    }
-
-    function loadBalance(){
-      fetch(base+"/transaction", { headers:{"Authorization":"Bearer "+TOKEN}})
-        .then(r=>r.ok ? r.json() : Promise.reject("status"))
-        .then(d=>updateUI(d.balance,d.expenses))
-        .catch(err=>{
-          document.getElementById("error").textContent = "Ошибка загрузки";
-          document.getElementById("error").classList.remove("hide");
-        });
-    }
-
-    function startIncome(){currType="income"; openForm(false);}
-    function startExpense(){currType="expense"; openForm(true);}
-    function openForm(show){
-      document.getElementById("form").style.display="block";
-      document.getElementById("categoryButtons").classList.toggle("hide",!show);
-    }
-    function selectCategory(c){selCat=c;}
-    function cancelForm(){
-      document.getElementById("form").style.display="none";
-      selCat=null; document.getElementById("amount").value="";
-    }
-
-    function submitForm(){
-      const v=parseFloat(document.getElementById("amount").value)
-      if(!v||v<=0)return alert("Введите сумму");
-      if(currType==="expense"&&!selCat)return alert("Выберите категорию");
-      fetch(base+"/transaction", {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Authorization":"Bearer "+TOKEN
-        },
-        body:JSON.stringify({type:currType,amount:v,category:currType==="expense"?selCat:null})
-      })
-      .then(r=>r.ok ? loadBalance() : Promise.reject("no"))
-      .then(cancelForm)
-      .catch(_=>document.getElementById("error").textContent="Ошибка сети",document.getElementById("error").classList.remove("hide"));
-    }
-
-    function showStats(){
-      document.getElementById("statsSection").classList.remove("hide");
-      fetchStats();
-    }
-
-    function fetchStats(){
-      const f=document.getElementById("filterSelect").value;
-      fetch(base+`/transaction/statistics?filter=${f}`, {
-        headers:{"Authorization":"Bearer "+TOKEN}
-      })
-      .then(r=>r.ok? r.json() : Promise.reject())
-      .then(d=>{
-        const ctx=document.getElementById("statsCanvas").getContext("2d");
-        const labs=Object.keys(d.expenses), vals=Object.values(d.expenses);
-        if(chart)chart.destroy();
-        chart=new Chart(ctx,{
-          type:'bar',
-          data:{labels:labs.length?labs:["Нет"],datasets:[{label:'Расходы',data:labs.length?vals:[0],backgroundColor:['#FFB6B9']}]},
-          options:{plugins:{legend:{display:false}}}
-        });
-      })
-      .catch(_=>alert("Ошибка статистики"));
-    }
-
-    loadBalance();
-  </script>
 </body>
 </html>
